@@ -2,75 +2,172 @@
 
 module Enumerable # rubocop:disable Metrics/ModuleLength
   def my_each
-    n = self.length
-    n.times do |i|
-      yield(self[i])
+    if block_given?
+      v = self
+      n = v.length
+      n.times do |i|
+        yield(v[i])
+      end
+    else
+      to_enum(:my_each)
     end
   end
 
-  def my_each_with_index(arr)
-    n = arr.length
-    n.times do |i|
-      yield(arr[i], i)
+  # [4, 7, 1].my_each { |a| puts a }
+
+  def my_each_with_index
+    if block_given?
+      v = self
+      n = v.length
+      n.times do |i|
+        yield(self[i], i)
+      end
+    else
+      to_enum(:my_each_with_index)
     end
   end
 
-  def my_select(arr)
-    temp = []
-    my_each(arr) do |a|
-      temp.push(a) if yield(a)
+  # [4, 7, 1].my_each_with_index { |_a, i| puts i }
+
+  def my_select
+    value = self
+    if block_given?
+      temp = []
+      value.my_each do |a|
+        temp.push(a) if yield(a)
+      end
+      temp
+    else
+      to_enum(:my_select)
     end
-    temp
   end
 
-  def my_all?(arr)
-    my_each(arr) do |a|
-      return false unless yield(a)
+  # puts([4, 7, 1].my_select { |a| a > 1 })
+
+  def my_all?(arg = nil) # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    value = self
+    if block_given?
+      if value.is_a? Hash
+        value.my_each { |a, b| return false unless yield(a, b) }
+      else
+        value.my_each { |a| return false unless yield(a) }
+      end
+    elsif arg.is_a? Regexp
+      value.my_each { |a| return false unless a =~ arg }
+    elsif arg.is_a? Class
+      value.my_each { |a| return false unless a.class == arg }
+    elsif arg.nil?
+      value.my_each { |a| return false unless a }
     end
     true
   end
 
-  def my_any?(arr)
-    my_each(arr) do |a|
-      return true if yield(a)
+  # puts([4, 7, 1].my_all? { |a| a > 0 })
+
+  def my_any? # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    value = self
+    if block_given?
+      if value.is_a? Hash
+        value.my_each { |a, b| return true if yield(a, b) }
+      else
+        value.my_each { |a| return true if yield(a) }
+      end
+    elsif arg.is_a? Regexp
+      value.my_each { |a| return true if a =~ arg }
+    elsif arg.is_a? Class
+      value.my_each { |a| return true if a.class == arg }
+    elsif arg.nil?
+      value.my_each { |a| return true if a }
     end
     false
   end
 
-  def my_none?(arr)
-    my_each(arr) do |a|
-      return false if yield(a)
+  # puts([4, 7, 1].my_any? { |a| a == 0 })
+
+  def my_none? # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    value = self
+    if block_given?
+      if value.is_a? Hash
+        value.my_each { |a, b| return false if yield(a, b) }
+      else
+        value.my_each { |a| return false if yield(a) }
+      end
+    elsif arg.is_a? Regexp
+      value.my_each { |a| return false if a =~ arg }
+    elsif arg.is_a? Class
+      value.my_each { |a| return false if a.class == arg }
+    elsif arg.nil?
+      value.my_each { |a| return false if a }
     end
     true
   end
 
-  def my_count(arr, condition = nil) # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  # puts([4, 7, 1].my_none? { |a| a == 1 })
+
+  def my_count(arg = nil) # rubocop:disable  Metrics/CyclomaticComplexity
+    value = self
     count = 0
     if block_given?
-      my_each(arr) do |a|
+      value.my_each do |a|
         count += 1 if yield(a)
       end
     end
 
-    unless condition.nil?
-      my_each(arr) do |a|
-        count += 1 if condition == a
+    unless arg.nil?
+      value.my_each do |a|
+        count += 1 if arg == a
       end
     end
 
-    count = arr.length if !block_given? && condition.nil?
+    count = value.length if !block_given? && arg.nil?
     count
   end
 
-  def my_map
-    #code
+  # puts([4, 7, 1].my_count(2))
+
+  def my_map(&block)
+    arr = []
+    value = self
+    if block_given?
+      if value.is_a? Hash
+        value.my_each { |a, b| arr.push(block.call(a, b)) }
+      elsif value.is_a? Array
+        value.my_each { |a| arr.push(block.call(a)) }
+      end
+    else
+      to_enum(:my_map)
+    end
+    arr
   end
 
-  def my_inject
-    #code
+  # test = proc { |i| i + 2 }
+  # puts([4, 7, 1].my_map(& test))
+  # puts([4, 7, 1].my_map { |i| i + 2 })
+
+  def my_inject(init = nil, arg = nil, &block) # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    value = self
+    sum
+    if block_given?
+      sum = init.nil? ? value[0] : init
+      value.my_each_with_index { |a, i| sum = block.call(sum, a) unless i.zero? }
+    elsif !init.nil? && arg.nil?
+      if init.is_a? Symbol
+        sum = value[0]
+        value.my_each_with_index { |a, i| sum = sum.send(init, a) unless i.zero? }
+      else
+        sum = init
+        value.my_each { |a| sum = block.call(sum, a) }
+      end
+    elsif !init.nil? && !arg.nil?
+      sum = init
+      value.my_each { |a| sum = sum.send(arg, a) }
+    end
+    sum
   end
+
+  def multiply_els(arg)
+    arg.my_inject { |sum, result| sum + result }
+  end
+
+  puts multiply_els([1, 2, 3])
 end
-
-include Enumerable
-
-puts [4, 7, 1].my_each { |a| puts a }
