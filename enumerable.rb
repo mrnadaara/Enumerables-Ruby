@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Enumerable # rubocop:disable Metrics/ModuleLength
+  # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def my_each
     if block_given?
       v = self
@@ -13,8 +14,6 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
     end
   end
 
-  # [4, 7, 1].my_each { |a| puts a }
-
   def my_each_with_index
     if block_given?
       v = self
@@ -26,8 +25,6 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
       to_enum(:my_each_with_index)
     end
   end
-
-  # [4, 7, 1].my_each_with_index { |_a, i| puts i }
 
   def my_select
     value = self
@@ -42,9 +39,7 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
     end
   end
 
-  # puts([4, 7, 1].my_select { |a| a > 1 })
-
-  def my_all?(arg = nil) # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def my_all?(arg = nil)
     value = self
     if block_given?
       if value.is_a? Hash
@@ -62,9 +57,7 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
     true
   end
 
-  # puts([4, 7, 1].my_all? { |a| a > 0 })
-
-  def my_any? # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def my_any?
     value = self
     if block_given?
       if value.is_a? Hash
@@ -82,9 +75,7 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
     false
   end
 
-  # puts([4, 7, 1].my_any? { |a| a == 0 })
-
-  def my_none? # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def my_none?
     value = self
     if block_given?
       if value.is_a? Hash
@@ -102,9 +93,7 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
     true
   end
 
-  # puts([4, 7, 1].my_none? { |a| a == 1 })
-
-  def my_count(arg = nil) # rubocop:disable  Metrics/CyclomaticComplexity
+  def my_count(arg = nil)
     value = self
     count = 0
     if block_given?
@@ -123,8 +112,6 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
     count
   end
 
-  # puts([4, 7, 1].my_count(2))
-
   def my_map(&block)
     arr = []
     value = self
@@ -140,11 +127,6 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
     arr
   end
 
-  # test = proc { |i| i + 2 }
-  # puts([4, 7, 1].my_map(& test))
-  # puts([4, 7, 1].my_map { |i| i + 2 })
-  
-  # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def my_inject(init = nil, arg = nil, &block)
     value = self
     sum
@@ -166,9 +148,21 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
     sum
   end
 
-  def multiply_els(arg)
-    arg.my_inject { |sum, result| sum + result }
+  def multiply_els
+    my_inject { |sum, result| sum + result }
   end
-
-  puts multiply_els([1, 2, 3])
 end
+
+# [4, 7, 1].my_each { |a| puts a }
+# [4, 7, 1].my_each_with_index { |_a, i| puts i }
+# puts([4, 7, 1].my_select { |a| a > 1 })
+# puts([4, 7, 1].my_all? { |a| a > 0 })
+# puts([4, 7, 1].my_any? { |a| a == 0 })
+# puts([4, 7, 1].my_none? { |a| a == 1 })
+# puts([4, 7, 1].my_count(2))
+
+# test = proc { |i| i + 2 }
+# puts([4, 7, 1].my_map(& test))
+# puts([4, 7, 1].my_map { |i| i + 2 })
+
+# puts([1, 2, 3].multiply_els)
