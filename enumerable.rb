@@ -151,6 +151,7 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
   def multiply_els
     my_inject { |sum, result| sum + result }
   end
+  # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 end
 
 # [4, 7, 1].my_each { |a| puts a }
