@@ -143,8 +143,9 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
   # test = proc { |i| i + 2 }
   # puts([4, 7, 1].my_map(& test))
   # puts([4, 7, 1].my_map { |i| i + 2 })
-
-  def my_inject(init = nil, arg = nil, &block) # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  
+  # rubocop:disable  Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def my_inject(init = nil, arg = nil, &block)
     value = self
     sum
     if block_given?
