@@ -135,7 +135,7 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
 
   def my_inject(init = nil, arg = nil, &block)
     value = self
-    value = value.to_a
+    value = value.dup.to_a
     accum = init
     if block_given?
       accum = init.nil? ? value.shift : init
