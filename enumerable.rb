@@ -53,11 +53,13 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
       value.my_each { |a| return false unless a.class == arg }
     elsif arg.nil?
       value.my_each { |a| return false unless a }
+    else
+      value.my_each { |a| return false unless a == arg }
     end
     true
   end
 
-  def my_any?
+  def my_any?(arg = nil)
     value = self
     if block_given?
       if value.is_a? Hash
@@ -71,11 +73,13 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
       value.my_each { |a| return true if a.class == arg }
     elsif arg.nil?
       value.my_each { |a| return true if a }
+    else
+      value.my_each { |a| return true if a == arg }
     end
     false
   end
 
-  def my_none?
+  def my_none?(arg = nil)
     value = self
     if block_given?
       if value.is_a? Hash
@@ -89,6 +93,8 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
       value.my_each { |a| return false if a.class == arg }
     elsif arg.nil?
       value.my_each { |a| return false if a }
+    else
+      value.my_each { |a| return false if a == arg }
     end
     true
   end
@@ -121,39 +127,41 @@ module Enumerable # rubocop:disable Metrics/ModuleLength
       elsif value.is_a? Array
         value.my_each { |a| arr.push(block.call(a)) }
       end
+      arr
     else
       to_enum(:my_map)
     end
-    arr
   end
 
   def my_inject(init = nil, arg = nil, &block)
     value = self
-    sum
+    value = value.to_a
+    accum = init
     if block_given?
-      sum = init.nil? ? value[0] : init
-      value.my_each_with_index { |a, i| sum = block.call(sum, a) unless i.zero? }
+      accum = init.nil? ? value.shift : init
+      value.my_each { |a| accum = block.call(accum, a) }
     elsif !init.nil? && arg.nil?
       if init.is_a? Symbol
-        sum = value[0]
-        value.my_each_with_index { |a, i| sum = sum.send(init, a) unless i.zero? }
+        accum = value.shift
+        value.my_each { |a| accum = accum.send(init, a) }
       else
-        sum = init
-        value.my_each { |a| sum = block.call(sum, a) }
+        accum = init
+        value.my_each { |a| accum = block.call(accum, a) }
       end
     elsif !init.nil? && !arg.nil?
-      sum = init
-      value.my_each { |a| sum = sum.send(arg, a) }
+      accum = init
+      value.my_each { |a| accum = accum.send(arg, a) }
     end
-    sum
-  end
-
-  def multiply_els
-    my_inject { |sum, result| sum + result }
+    accum
   end
   # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 end
 
+def multiply_els(arg)
+  arg.my_inject { |sum, result| sum * result }
+end
+
+# puts(multiply_els((1...4)))
 # [4, 7, 1].my_each { |a| puts a }
 # [4, 7, 1].my_each_with_index { |_a, i| puts i }
 # puts([4, 7, 1].my_select { |a| a > 1 })
